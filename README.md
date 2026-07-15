@@ -1,2 +1,0 @@
-# kalkulyator
-Uzum kalkulyator
