@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Savdo kalkulyatori</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f4f5f7;
+    color: #1a1a1a;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 22px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; text-align: center; }
+  .subtitle { font-size: 13px; color: #6b7280; text-align: center; margin: 0 0 18px; }
+
+  .mode-select {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .mode-btn.active { border-color: #2563eb; background: #eff6ff; color: #1e3a8a; }
+  .mode-btn .sub { display: block; font-size: 11px; font-weight: 400; color: #9ca3af; margin-top: 2px; }
+  .mode-btn.active .sub { color: #60a5fa; }
+
+  label { display: block; font-size: 14px; color: #4b5563; margin-bottom: 6px; }
+  input[type="number"] {
+    width: 100%;
+    font-size: 22px;
+    font-weight: 600;
+    padding: 14px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    outline: none;
+  }
+  input[type="number"]:focus { border-color: #2563eb; }
+  #summa { margin-bottom: 14px; }
+  button.main {
+    width: 100%;
+    background: #2563eb;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 18px;
+  }
+  button.main:active { background: #1e4fc4; }
+  .results { display: none; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .metric { background: #f0f4ff; border-radius: 10px; padding: 14px; }
+  .metric .label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+  .metric .value { font-size: 24px; font-weight: 700; color: #1e3a8a; }
+  .metric .sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .summary { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; }
+  .summary table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .summary td { padding: 6px 0; }
+  .summary td:last-child { text-align: right; font-weight: 600; }
+  .summary tr.total td { border-top: 1px solid #e5e7eb; padding-top: 10px; font-weight: 700; font-size: 16px; }
+  .error { display: none; background: #fef2f2; color: #b91c1c; border-radius: 10px; padding: 12px 16px; font-size: 14px; margin-bottom: 12px; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+  .tabs button { flex: 1; padding: 10px; border: none; border-radius: 8px; background: #f3f4f6; color: #6b7280; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .tabs button.active { background: #1e3a8a; color: white; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .settings-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .settings-tabs button { flex: 1; padding: 9px; border: 2px solid #e5e7eb; border-radius: 8px; background: white; color: #6b7280; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .settings-tabs button.active { border-color: #2563eb; background: #eff6ff; color: #1e3a8a; }
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .settings-grid label { font-size: 13px; margin-bottom: 5px; }
+  .settings-grid input { width: 100%; font-size: 16px; font-weight: 600; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 8px; }
+  .settings-grid input:focus { border-color: #2563eb; }
+  .group-title { font-size: 13px; font-weight: 600; color: #1e3a8a; margin: 4px 0 8px; }
+  .saved-msg { font-size: 13px; color: #16a34a; text-align: center; margin-bottom: 10px; display: none; }
+  button.secondary { width: 100%; background: white; color: #4b5563; font-size: 14px; font-weight: 600; padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; cursor: pointer; }
+
+  .eslatma { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
+  .eslatma b { font-weight: 700; }
+  .eslatma .tugma { display: inline-block; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 5px; padding: 1px 6px; font-family: monospace; font-weight: 700; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Savdo kalkulyatori</h1>
+  <p class="subtitle">Summani kiriting — tovarlar soni avtomatik hisoblanadi</p>
+
+  <div class="tabs">
+    <button id="tabHisob" class="active" onclick="switchTab('hisob')">Hisoblash</button>
+    <button id="tabSozlama" onclick="switchTab('sozlama')">Narxlar</button>
+  </div>
+
+  <div class="panel active" id="panelHisob">
+    <div class="eslatma">
+      <b>Diqqat:</b> narxlar o'zgartirilganda, savdo qilishdan oldin sahifani yangilang —
+      kompyuterda <span class="tugma">Ctrl</span> + <span class="tugma">Shift</span> + <span class="tugma">R</span>,
+      telefonda sahifani pastga tortib yangilang. Aks holda eski narxlar bilan hisoblanishi mumkin.
+    </div>
+    <div class="mode-select">
+      <button class="mode-btn" id="modeBtnOddiy" onclick="tanlaRejim('oddiy')">
+        Oddiy holat
+        <span class="sub" id="oddiySub"></span>
+      </button>
+      <button class="mode-btn" id="modeBtnAksiya" onclick="tanlaRejim('aksiya')">
+        Aksiya (0-0-4)
+        <span class="sub" id="aksiyaSub"></span>
+      </button>
+    </div>
+
+    <label for="summa">Savdo summasi (so'm)</label>
+    <input type="number" id="summa" placeholder="Masalan: 895000" inputmode="numeric">
+
+    <button class="main" onclick="hisobla()">Hisoblash</button>
+
+    <div class="error" id="xato"></div>
+
+    <div class="results" id="natija">
+      <div class="grid">
+        <div class="metric">
+          <div class="label">Avtobalon</div>
+          <div class="value" id="avtSoni">0</div>
+          <div class="sub" id="avtNarx">0 so'mdan</div>
+        </div>
+        <div class="metric">
+          <div class="label">Akumlyator</div>
+          <div class="value" id="akmSoni">0</div>
+          <div class="sub" id="akmNarx">0 so'mdan</div>
+        </div>
+        <div class="metric">
+          <div class="label">Diska</div>
+          <div class="value" id="dskSoni">0</div>
+          <div class="sub" id="dskNarx">0 so'mdan</div>
+        </div>
+        <div class="metric">
+          <div class="label">Kolotka</div>
+          <div class="value" id="kolSoni">0</div>
+          <div class="sub" id="kolNarx">0 so'mdan</div>
+        </div>
+      </div>
+      <div class="summary">
+        <table>
+          <tr><td>Avtobalon summasi</td><td id="avtJami">0 so'm</td></tr>
+          <tr><td>Akumlyator summasi</td><td id="akmJami">0 so'm</td></tr>
+          <tr><td>Diska summasi</td><td id="dskJami">0 so'm</td></tr>
+          <tr><td>Kolotka summasi</td><td id="kolJami">0 so'm</td></tr>
+          <tr class="total"><td>Jami</td><td id="jamiSumma">0 so'm</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panelSozlama">
+    <div class="saved-msg" id="savedMsg">Yangilandi</div>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 14px;">Bu narxlar barcha foydalanuvchilar uchun umumiy — o'zgartirish uchun pastdagi tugmani bosing.</p>
+
+    <div class="settings-tabs">
+      <button id="setTabOddiy" class="active" onclick="sozlamaTab('oddiy')">Oddiy holat</button>
+      <button id="setTabAksiya" onclick="sozlamaTab('aksiya')">Aksiya (0-0-4)</button>
+    </div>
+
+    <div class="group-title">Avtobalon narxi (so'm)</div>
+    <div class="settings-grid">
+      <div>
+        <label>Minimal</label>
+        <input type="number" id="avtMin" readonly>
+      </div>
+      <div>
+        <label>Maksimal</label>
+        <input type="number" id="avtMax" readonly>
+      </div>
+    </div>
+
+    <div class="group-title">Akumlyator narxi (so'm)</div>
+    <div class="settings-grid">
+      <div>
+        <label>Minimal</label>
+        <input type="number" id="akmMin" readonly>
+      </div>
+      <div>
+        <label>Maksimal</label>
+        <input type="number" id="akmMax" readonly>
+      </div>
+    </div>
+
+    <div class="group-title">Diska narxi (so'm)</div>
+    <div class="settings-grid">
+      <div>
+        <label>Minimal</label>
+        <input type="number" id="dskMin" readonly>
+      </div>
+      <div>
+        <label>Maksimal</label>
+        <input type="number" id="dskMax" readonly>
+      </div>
+    </div>
+
+    <div class="group-title">Kolotka narxi (so'm)</div>
+    <div class="settings-grid">
+      <div>
+        <label>Minimal</label>
+        <input type="number" id="kolMin" readonly>
+      </div>
+      <div>
+        <label>Maksimal</label>
+        <input type="number" id="kolMax" readonly>
+      </div>
+    </div>
+
+    <a href="https://github.com/askobuxgalteriya-creator/kalkulyator/edit/main/narxlar.json" target="_blank" style="text-decoration:none;">
+      <button class="main" style="margin-bottom:10px;" type="button">GitHub'da narxni o'zgartirish</button>
+    </a>
+    <button class="secondary" onclick="narxlarniYuklash(true)">Qayta yuklash</button>
+  </div>
+</div>
+
+
+<script>
+const DEFAULTS = {
+  oddiy: {
+    avt: { min: 260000, max: 280000 },
+    akm: { min: 250000, max: 260000 },
+    dsk: { min: 200000, max: 210000 },
+    kol: { min: 20000,  max: 40000  }
+  },
+  aksiya: {
+    avt: { min: 280000, max: 300000 },
+    akm: { min: 280000, max: 300000 },
+    dsk: { min: 225000, max: 240000 },
+    kol: { min: 25000,  max: 45000  }
+  }
+};
+const MODE_KEY = 'savdo_kalkulyatori_faol_rejim';
+
+let narxlar = JSON.parse(JSON.stringify(DEFAULTS));
+let faolRejim = 'oddiy';
+let sozlamaKorinishRejimi = 'oddiy';
+
+function yuklaRejim() {
+  try {
+    const m = localStorage.getItem(MODE_KEY);
+    if (m === 'oddiy' || m === 'aksiya') faolRejim = m;
+  } catch (e) {}
+}
+
+function saqlaRejim() {
+  try {
+    localStorage.setItem(MODE_KEY, faolRejim);
+  } catch (e) {}
+}
+
+function narxlarToTekshir(data) {
+  if (!data || !data.oddiy || !data.aksiya) return false;
+  for (const rejim of ['oddiy', 'aksiya']) {
+    for (const key of ['avt', 'akm', 'dsk', 'kol']) {
+      const v = data[rejim][key];
+      if (!v || typeof v.min !== 'number' || typeof v.max !== 'number') return false;
+    }
+  }
+  return true;
+}
+
+function narxlarniYuklash(korsatXabar) {
+  fetch('narxlar.json?t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      if (narxlarToTekshir(data)) {
+        narxlar = data;
+        yangilaModeTugmalari();
+        if (document.getElementById('panelSozlama').classList.contains('active')) {
+          sozlamaTab(sozlamaKorinishRejimi);
+        }
+        if (korsatXabar) {
+          const msg = document.getElementById('savedMsg');
+          msg.style.display = 'block';
+          clearTimeout(window._savedTimeout);
+          window._savedTimeout = setTimeout(() => { msg.style.display = 'none'; }, 1500);
+        }
+      }
+    })
+    .catch(() => { /* narxlar.json topilmasa, standart narxlar bilan ishlayveradi */ });
+}
+
+function switchTab(tab) {
+  document.getElementById('panelHisob').classList.toggle('active', tab === 'hisob');
+  document.getElementById('panelSozlama').classList.toggle('active', tab === 'sozlama');
+  document.getElementById('tabHisob').classList.toggle('active', tab === 'hisob');
+  document.getElementById('tabSozlama').classList.toggle('active', tab === 'sozlama');
+  if (tab === 'sozlama') {
+    sozlamaTab(faolRejim);
+  }
+}
+
+function fmt(n) { return Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' '); }
+
+function yangilaModeTugmalari() {
+  document.getElementById('modeBtnOddiy').classList.toggle('active', faolRejim === 'oddiy');
+  document.getElementById('modeBtnAksiya').classList.toggle('active', faolRejim === 'aksiya');
+  const o = narxlar.oddiy, a = narxlar.aksiya;
+  document.getElementById('oddiySub').textContent = fmt(o.avt.min) + '-' + fmt(o.avt.max);
+  document.getElementById('aksiyaSub').textContent = fmt(a.avt.min) + '-' + fmt(a.avt.max);
+}
+
+function tanlaRejim(rejim) {
+  faolRejim = rejim;
+  saqlaRejim();
+  yangilaModeTugmalari();
+}
+
+function sozlamaTab(rejim) {
+  sozlamaKorinishRejimi = rejim;
+  document.getElementById('setTabOddiy').classList.toggle('active', rejim === 'oddiy');
+  document.getElementById('setTabAksiya').classList.toggle('active', rejim === 'aksiya');
+  const v = narxlar[rejim];
+  document.getElementById('avtMin').value = v.avt.min;
+  document.getElementById('avtMax').value = v.avt.max;
+  document.getElementById('akmMin').value = v.akm.min;
+  document.getElementById('akmMax').value = v.akm.max;
+  document.getElementById('dskMin').value = v.dsk.min;
+  document.getElementById('dskMax').value = v.dsk.max;
+  document.getElementById('kolMin').value = v.kol.min;
+  document.getElementById('kolMax').value = v.kol.max;
+}
+
+/*
+  Hisoblash mantig'i:
+  - Avtobalon, Akumlyator, Diska — "katta" tovarlar (o'z narx oralig'i bilan).
+  - Kolotka — qoldiqni to'ldiruvchi mayda tovar.
+  Barcha tovarlarning yig'indisi aniq S ga teng bo'lishi kerak, har bir
+  tovarning dona narxi o'z min-max oralig'idan chiqmasligi kerak.
+
+  Tanlov ustuvorliklari:
+  1) Kolotka iloji boricha kamroq (imkon bo'lsa, umuman) ishlatiladi —
+     avval faqat katta tovarlar bilan S ga aniq tushadigan variant
+     qidiriladi; bo'lmasa, kolotka eng kam miqdorda qo'shiladi.
+  2) Shu daraja ichida, mavjud (tugamagan) katta tovarlarning summalari
+     bir-biriga imkon qadar teng bo'ladigan variant tanlanadi.
+  3) Bir nechtasi teng bo'lsa, ular orasidan tasodifiy biri olinadi.
+*/
+function hisobla() {
+  const S = parseFloat(document.getElementById('summa').value);
+  const cfg = narxlar[faolRejim];
+  const AVT = cfg.avt, AKM = cfg.akm, DSK = cfg.dsk, KOL = cfg.kol;
+
+  const natijaEl = document.getElementById('natija');
+  const xatoEl = document.getElementById('xato');
+
+  if (!S || S <= 0) {
+    natijaEl.style.display = 'none';
+    xatoEl.style.display = 'block';
+    xatoEl.textContent = 'Iltimos, savdo summasini kiriting.';
+    return;
+  }
+
+  const bigItems = [
+    { key: 'avt', min: AVT.min, max: AVT.max },
+    { key: 'akm', min: AKM.min, max: AKM.max },
+    { key: 'dsk', min: DSK.min, max: DSK.max }
+  ];
+  const QIDIRUV_CHEGARASI = 60;
+  // Agar tovarning min va max narxi ikkalasi ham 0 bo'lsa — tovar qolmagan
+  // degani, shu tovar hisoblashda umuman ishtirok etmasligi kerak (soni 0).
+  const mavjud = bigItems.map(it => !(it.min <= 0 && it.max <= 0));
+  const maxN = bigItems.map((it, i) => mavjud[i] ? Math.min(QIDIRUV_CHEGARASI, Math.floor(S / it.min)) : 0);
+  const KOL_MAVJUD = !(KOL.min <= 0 && KOL.max <= 0);
+
+  function bigPrices(usedMin, usedMax, bigTotal) {
+    if (usedMax === usedMin) return bigItems.map(it => it.min);
+    const t = (bigTotal - usedMin) / (usedMax - usedMin);
+    return bigItems.map(it => it.min + t * (it.max - it.min));
+  }
+
+  // Mavjud tovarlar summalari bir-biriga qanchalik yaqinligini o'lchaydi
+  // (0 — mukammal teng; kattaroq son — tengsizlik kattaroq).
+  function tengsizlikBalli(sums) {
+    const qatnashganlar = sums.filter((s, i) => mavjud[i]);
+    if (qatnashganlar.length <= 1) return 0;
+    return Math.max(...qatnashganlar) - Math.min(...qatnashganlar);
+  }
+
+  const TOLERANS = 0.5; // so'mdagi kichik kasr farqlarga chidamli bo'lish uchun
+  let engKamKolotka = Infinity;
+  let nomzodlar = []; // faqat eng kam kolotka darajasidagi nomzodlar saqlanadi
+
+  function nomzodQosh(n1, n2, n3, n4, p1, p2, p3, p4, kolSumma) {
+    if (kolSumma > engKamKolotka + TOLERANS) return; // yomonroq, e'tiborsiz qoldiriladi
+    const sums = [n1 * p1, n2 * p2, n3 * p3];
+    const nomzod = {
+      n1, n2, n3, n4, p1, p2, p3, p4,
+      avtSumma: sums[0], akmSumma: sums[1], dskSumma: sums[2], kolSumma,
+      teng: tengsizlikBalli(sums)
+    };
+    if (kolSumma < engKamKolotka - TOLERANS) {
+      engKamKolotka = kolSumma;
+      nomzodlar = [nomzod];
+    } else {
+      nomzodlar.push(nomzod);
+    }
+  }
+
+  for (let n1 = 0; n1 <= maxN[0]; n1++) {
+    for (let n2 = 0; n2 <= maxN[1]; n2++) {
+      const usedMin12 = n1 * bigItems[0].min + n2 * bigItems[1].min;
+      if (usedMin12 > S) break;
+      for (let n3 = 0; n3 <= maxN[2]; n3++) {
+        const usedMin = usedMin12 + n3 * bigItems[2].min;
+        if (usedMin > S) break;
+        const usedMax = n1 * bigItems[0].max + n2 * bigItems[1].max + n3 * bigItems[2].max;
+
+        if (S >= usedMin && S <= usedMax && usedMax > 0) {
+          // Kolotkasiz, aniq mos keladi — bu har doim eng ustuvor holat.
+          const prices = bigPrices(usedMin, usedMax, S);
+          nomzodQosh(n1, n2, n3, 0, prices[0], prices[1], prices[2], 0, 0);
+          continue;
+        }
+
+        if (!KOL_MAVJUD) continue;
+
+        const rMin = Math.max(0, S - usedMax);
+        const rMax = S - usedMin;
+        if (rMax < 0) continue;
+
+        // Kolotkani iloji boricha kamroq ishlatish uchun eng kichik n4 va
+        // shu n4 ichida eng kichik R (kolotka summasi) tanlanadi.
+        let n4 = Math.max(1, Math.ceil(rMin / KOL.max));
+        if (KOL.min * n4 > rMax) continue;
+
+        const R = Math.max(rMin, KOL.min * n4);
+        if (R > rMax) continue;
+
+        const bigTotal = S - R;
+        const prices = bigPrices(usedMin, usedMax, bigTotal);
+        nomzodQosh(n1, n2, n3, n4, prices[0], prices[1], prices[2], R / n4, R);
+      }
+    }
+  }
+
+  let found = null;
+  if (nomzodlar.length > 0) {
+    const engTengi = Math.min(...nomzodlar.map(c => c.teng));
+    const engYaxshilari = nomzodlar.filter(c => c.teng <= engTengi + TOLERANS);
+    found = engYaxshilari[Math.floor(Math.random() * engYaxshilari.length)];
+  }
+
+  if (!found) {
+    natijaEl.style.display = 'none';
+    xatoEl.style.display = 'block';
+    xatoEl.textContent = 'Bu summa uchun mos variant topilmadi. Summani yoki narx sozlamalarini tekshiring.';
+    return;
+  }
+
+  xatoEl.style.display = 'none';
+  natijaEl.style.display = 'block';
+
+  document.getElementById('avtSoni').textContent = found.n1 + ' dona';
+  document.getElementById('avtNarx').textContent = (found.n1 > 0 ? fmt(found.p1) + ' so\'mdan' : 'sotilmagan');
+  document.getElementById('akmSoni').textContent = found.n2 + ' dona';
+  document.getElementById('akmNarx').textContent = (found.n2 > 0 ? fmt(found.p2) + ' so\'mdan' : 'sotilmagan');
+  document.getElementById('dskSoni').textContent = found.n3 + ' dona';
+  document.getElementById('dskNarx').textContent = (found.n3 > 0 ? fmt(found.p3) + ' so\'mdan' : 'sotilmagan');
+  document.getElementById('kolSoni').textContent = found.n4 + ' dona';
+  document.getElementById('kolNarx').textContent = (found.n4 > 0 ? fmt(found.p4) + ' so\'mdan' : 'sotilmagan');
+
+  document.getElementById('avtJami').textContent = fmt(found.avtSumma) + ' so\'m';
+  document.getElementById('akmJami').textContent = fmt(found.akmSumma) + ' so\'m';
+  document.getElementById('dskJami').textContent = fmt(found.dskSumma) + ' so\'m';
+  document.getElementById('kolJami').textContent = fmt(found.kolSumma) + ' so\'m';
+  document.getElementById('jamiSumma').textContent = fmt(found.avtSumma + found.akmSumma + found.dskSumma + found.kolSumma) + ' so\'m';
+}
+
+document.getElementById('summa').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') hisobla();
+});
+
+yuklaRejim();
+yangilaModeTugmalari();
+sozlamaTab(faolRejim);
+narxlarniYuklash(false);
+</script>
+
+</body>
+</html>
